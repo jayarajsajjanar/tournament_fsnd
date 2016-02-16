@@ -146,8 +146,30 @@ def swissPairings():
         name1: the first player's name
         id2: the second player's unique id
         name2: the second player's name
+        eg : [(1,john,2,billy), (3,peter,4,will) , .....]
     """
-
+    cur4=conn.cursor()
+    query= "SELECT * from players order by WINS desc,MATCHES asc;"
+    cur4.execute(query)
+    rows = cur4.fetchall()
+    count=1
+    temp_pid = ()
+    temp_name = ()
+    pid = ()
+    name = ()
+    outer_list = []
+    inner_tuple = ()
+    for row in rows:
+        pid = (row[0],)
+        name=(row[1],)
+        if count in {1,3,5,7}:
+            temp_pid = pid
+            temp_name = name
+        else:
+            inner_tuple = temp_pid+temp_name+pid+name
+            outer_list.append(inner_tuple)
+        count=count+1
+    return outer_list
 
 conn = psycopg2.connect("dbname=tournament")
 

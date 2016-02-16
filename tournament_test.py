@@ -64,7 +64,6 @@ def testStandingsBeforeMatches():
         raise ValueError(
             "Newly registered players should have no matches or wins.")
     if set([name1, name2]) != set(["Melpomene Murray", "Randy Schwartz"]):
-        print (name1,name2)
         raise ValueError("Registered players' names should appear in standings, "
                          "even if they have no matches played.")
     print "6. Newly registered players appear in the standings with no matches."
@@ -77,7 +76,7 @@ def testReportMatches():
     deleteMatches()
     deletePlayers()
     registerPlayer("Bruno Walton")
-    registerPlayer("Boots ONeal")
+    registerPlayer("Boots O'Neal")
     registerPlayer("Cathy Burton")
     registerPlayer("Diane Grant")
     standings = playerStandings()
@@ -86,7 +85,6 @@ def testReportMatches():
     reportMatch(id3, id4)
     standings = playerStandings()
     for (i, n, w, m) in standings:
-        print (i,n,w,m)
         if m != 1:
             raise ValueError("Each player should have one match recorded.")
         if i in (id1, id3) and w != 1:

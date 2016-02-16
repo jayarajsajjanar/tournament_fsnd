@@ -2,27 +2,27 @@
 # 
 # tournament.py -- implementation of a Swiss-system tournament
 #
-
+    
 import psycopg2
 import sys
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
-    #return psycopg2.connect("dbname=tournament")
     try:
         conn = psycopg2.connect("dbname=tournament")
         return conn
     except:
-        print "I am unable to connect to the database"
+        print "		I am unable to connect to the database"
 
 def deleteMatches():
     """Remove all the match records from the database."""
     cur3=conn.cursor()
     query = "DELETE from MATCHES;"
     cur3.execute(query)
+    #The "players" table is modified accordingly.
     cur3.execute("UPDATE players SET MATCHES = 0,WINS = 0;")
     cur3.execute("commit;") 
-    print "\nTable DELETED\n"
+    print "\t\t\tMatches Table DELETED\n"
 
 def deletePlayers():
     """Remove all the player records from the database."""
@@ -30,13 +30,14 @@ def deletePlayers():
     query = "DELETE from players;"
     cur3.execute(query)
     cur3.execute("commit;") 
-    print "\nTable DELETED\n"
+    print "\n"
+    print "\t\t\tPlayers Table DELETED\n"
     cur3.execute("""SELECT * from players""")
     rows = cur3.fetchall()
-    print "\nSELECT * from players:\n"
+    print "\t\t\tSELECT * from players after deleting all players:\n\n\n"
     #print (rows)
     for row in rows:
-        print row
+        print "               ",row
         count=count+1
     
 
@@ -45,13 +46,16 @@ def countPlayers():
     cur1 = conn.cursor()
     cur1.execute("""SELECT * from players""")
     rows = cur1.fetchall()
-    print "\nSELECT * from players:\n"
+    print "\t\t\tCount players; SELECT * from players:\n"
     #print (rows)
     count=0
     for row in rows:
-        print row
+        print "\t\t\t",row
         count=count+1
+    print "\t\t\tCount:",count
+    print "\n"
     return count
+    
 
 
 def registerPlayer(name):
@@ -63,13 +67,25 @@ def registerPlayer(name):
     Args:
       name: the player's full name (need not be unique).
     """
-    print ("registering....\t",name)
+    print "\n"
+    print "\t\t\tRegistering....\t",name
     cur2=conn.cursor()
-    query = """INSERT INTO players(NAME,MATCHES,WINS) VALUES ( '%s', 0, 0 );""" %name
-    cur2.execute(query)
+
+    #Below are 2 different failed attempts at passing variables to sqlcommand.
+    #attempt1 =====>
+    #query = """INSERT INTO players(NAME,MATCHES,WINS) VALUES ( '%s', 0, 0 );""" %name
+    #cur2.execute(query)
+    #attempt1 =====>
+    #cur2.execute("""INSERT INTO players (NAME,MATCHES,WINS) VALUES (%(str)s, 0, 0);""") %name
+
+    #New player is registered using "name" parameter. "matches" and "wins" in "players" is set to "0" by default.
+    SQL = "INSERT INTO players(NAME,MATCHES,WINS) VALUES ( %s, 0, 0 );" # Note: no quotes
+    data = (name, )
+    cur2.execute(SQL, data) # Note: no % operator
     cur2.execute("commit;") 
-    cur2.execute("SELECT * from players;")
-    print "\nregistered\n"
+    cur2.execute("\t\t\tSELECT * from players;")
+    
+    print "\t\t\tRegistered!!\n"
 
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
@@ -88,6 +104,7 @@ def playerStandings():
     query= "SELECT * from players order by WINS desc,MATCHES asc;"
     cur4.execute(query)
     rows = cur4.fetchall()
+
     return rows
     
     
@@ -99,13 +116,15 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
-    print ("\n reporting match.....",winner,loser)
+    print "\n"
+    print "\t\t\tReporting match.....","winner:",winner,"\tloser:",loser
+
     cur1 = conn.cursor()
     cur1.execute("""SELECT * from players""")
     rows = cur1.fetchall()
     
     winner_wins_updated,winner_matches_updated,loser_matches_updated = 0, 0, 0
-    #print (rows)
+    
     for row in rows:
         if row[0] == winner:
             winner_matches_updated=row[2]+1
@@ -114,21 +133,24 @@ def reportMatch(winner, loser):
             loser_matches_updated=row[2]+1
 
 
-
+    #Updating the "players" and "matches" tables based on the latest match reported.
     query1="UPDATE players SET MATCHES = %d,WINS = %d where id  = %d;" %(winner_matches_updated,winner_wins_updated,winner)
     query2="UPDATE players SET MATCHES = %d where id  = %d;" %(loser_matches_updated,loser)
         
     cur1.execute(query1)
     cur1.execute(query2)
     cur1.execute("COMMIT;")
-    print "\n match reported\n"
+
+    print "\n"
+    print "\t\t\tMatch reported\n"
 
     rows1=playerStandings()
 
-    print "Updated Standings:\n"
+    print "\t\t\tUpdated Standings after reporting match:\n"
         #print (rows)
     for row1 in rows1:
-        print (row1)
+        print "\t\t\t",row1
+    print "\n"
 
  
  
@@ -148,17 +170,27 @@ def swissPairings():
         name2: the second player's name
         eg : [(1,john,2,billy), (3,peter,4,will) , .....]
     """
+    #LOGIC used in pairing :
+    #   Latest standings are extracted using "players" table. 
+    #   From the standings, 2 players sets/tuples are chosen wherein the players have similar "wins".(Adjacent)
+    #   
     cur4=conn.cursor()
     query= "SELECT * from players order by WINS desc,MATCHES asc;"
     cur4.execute(query)
     rows = cur4.fetchall()
+    
+    #Below are the temporary variables used in processing.
     count=1
     temp_pid = ()
     temp_name = ()
     pid = ()
     name = ()
+
+    #For executing the test cases successfully, the returned datastructure should be a list of tuples.
     outer_list = []
     inner_tuple = ()
+
+    #Instantiating and returning the datastructure.
     for row in rows:
         pid = (row[0],)
         name=(row[1],)
@@ -171,70 +203,7 @@ def swissPairings():
         count=count+1
     return outer_list
 
+#In each function, a cursor is attached to the connection and then the respective queries are executed.
 conn = psycopg2.connect("dbname=tournament")
 
 
-#ret=connect()
-#cur=ret.cursor
-# registerPlayer('xyz')
-
-# print "Counting...."
-# count_players = countPlayers()
-# print "\n counted results: %s \n" %count_players
-
-
-
-# rows=playerStandings()
-
-# print "\nStandings:\n"
-#     #print (rows)
-# for row in rows:
-#     print (row)
-
-# # reportMatch('Allen','Teddy')
-
-# rows=playerStandings()
-
-# print "\nNEW Standings:\n"
-#     #print (rows)
-# for row in rows:
-#     print (row)
-
-# deletePlayers()
-        
-
-
-"""print "Welcome!! \n Choose an option : \n"
-#Welcome_string = 
-        #1) DeleteMatches
-        #2) Delete
-        #3) Count() 
-        #4) Register()
-        #5) RegisterCountDelete()
-        #6) StandingsBeforeMatches()
-        #7) ReportMatches()
-        #8) Pairings
-
-print Welcome_string
-choice = input("")
-
-if choice == 1:
-    print "DeleteMatches"
-elif choice == 2:
-    print "Delete"
-elif choice == 3:
-    print "Counting"
-    count_players = countPlayers(ret)
-elif choice == 4:
-    print "Registering"
-elif choice == 5:
-    print "Registering Count deliting"
-elif choice == 6:
-    print "Standings before matches"
-elif choice == 7:
-    print "Matches"
-elif choice == 8:
-    print "Pairings"
-else:
-    print "Choose again!!"
-"""

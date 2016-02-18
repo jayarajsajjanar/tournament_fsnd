@@ -19,7 +19,7 @@ def deleteMatches():
     cur3=conn.cursor()
     query = "DELETE from MATCHES;"
     cur3.execute(query)
-    #The "players" table is modified accordingly.
+    #When the "Matches" table is deleted, the "players" table is modified accordingly.
     cur3.execute("UPDATE players SET MATCHES = 0,WINS = 0;")
     cur3.execute("commit;") 
     print "\t\t\tMatches Table DELETED\n"
@@ -75,10 +75,10 @@ def registerPlayer(name):
     #attempt1 =====>
     #query = """INSERT INTO players(NAME,MATCHES,WINS) VALUES ( '%s', 0, 0 );""" %name
     #cur2.execute(query)
-    #attempt1 =====>
+    #attempt2 =====>
     #cur2.execute("""INSERT INTO players (NAME,MATCHES,WINS) VALUES (%(str)s, 0, 0);""") %name
 
-    #New player is registered using "name" parameter. "matches" and "wins" in "players" is set to "0" by default.
+    #New player is registered into the table using "name" parameter. "matches" and "wins" in "players" table is set to "0" by default.
     SQL = "INSERT INTO players(NAME,MATCHES,WINS) VALUES ( %s, 0, 0 );" # Note: no quotes
     data = (name, )
     cur2.execute(SQL, data) # Note: no % operator
@@ -125,6 +125,8 @@ def reportMatch(winner, loser):
     
     winner_wins_updated,winner_matches_updated,loser_matches_updated = 0, 0, 0
     
+    #Update the win counts and match counts for the winner.
+    #And update only match counts for the loser.
     for row in rows:
         if row[0] == winner:
             winner_matches_updated=row[2]+1

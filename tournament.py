@@ -76,7 +76,7 @@ def registerPlayer(name):
     #query = """INSERT INTO players(NAME,MATCHES,WINS) VALUES ( '%s', 0, 0 );""" %name
     #cur2.execute(query)
     #attempt2 =====>
-    #cur2.execute("""INSERT INTO players (NAME,MATCHES,WINS) VALUES (%(str)s, 0, 0);""") %name
+    #cur2.execute("""INSERT INTO players (NAME,MATCHES,WINS) VALUES (%(str)s, 0, 0);""") {str = name}
 
     #New player is registered into the table using "name" parameter. "matches" and "wins" in "players" table is set to "0" by default.
     SQL = "INSERT INTO players(NAME,MATCHES,WINS) VALUES ( %s, 0, 0 );" # Note: no quotes

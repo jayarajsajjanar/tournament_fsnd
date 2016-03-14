@@ -16,9 +16,12 @@ CREATE DATABASE tournament;
 \c tournament;
 
 --AUTO increments ID column.
-CREATE TABLE players(ID SERIAL PRIMARY KEY NOT NULL, NAME VARCHAR(50), WINS INT, MATCHES INT);
+CREATE TABLE players(ID SERIAL PRIMARY KEY NOT NULL, NAME VARCHAR(50));
 
---DEFAULT VALUES for only code testing - Does not add any functionality!!
+--DEFAULT VALUES only for code testing - Does not add any functionality!!
 --\COPY players(NAME,MATCHES,WINS) FROM 'players_data.csv' DELIMITER ',' CSV;
 
-CREATE TABLE matches(ID INT PRIMARY KEY NOT NULL, WINNER INT,LOSER INT);
+--AUTO increments ID column.
+-- Winner and Loser references players(id) to prevent inconsistent data.(only players in 'players' are accepted)
+CREATE TABLE matches(ID SERIAL PRIMARY KEY NOT NULL, WINNER INT REFERENCES players(ID),LOSER INT REFERENCES players(ID));
+
